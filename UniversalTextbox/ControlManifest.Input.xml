@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="illusion615" constructor="UniversalTextbox" version="0.0.1" display-name-key="UniversalTextbox" description-key="UniversalTextbox description" control-type="virtual">
+    <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.
+    If it is not using any external service, please set the enabled="false" and DO NOT add any domain below. The "enabled" will be false by default.
+    Example1:
+      <external-service-usage enabled="true">
+        <domain>www.Microsoft.com</domain>
+      </external-service-usage>
+    Example2:
+      <external-service-usage enabled="false">
+      </external-service-usage>
+    -->
+    <external-service-usage enabled="false">
+      <!--UNCOMMENT TO ADD EXTERNAL DOMAINS
+      <domain></domain>
+      <domain></domain>
+      -->
+    </external-service-usage>
+    <!-- property node identifies a specific, configurable piece of data that the control expects from CDS -->
+    <property name="Text" display-name-key="Text" description-key="The text content" of-type-group="Text" usage="bound" required="true" />
+    <property name="TextType" display-name-key="Text Type" description-key="Text Type" of-type="Enum" usage="input" required="true">
+      <value name="Markdown" display-name-key="Markdown">1</value>
+      <value name="Json" display-name-key="Json">2</value>
+      <value name="Html" display-name-key="Html">3</value>
+    </property>
+    <property name="DisplayMode" display-name-key="Display Mode" description-key="Set the display mode" of-type="Enum" usage="input" required="true">
+      <value name="View" display-name-key="View">1</value>
+      <value name="Edit" display-name-key="Edit">2</value>
+      <value name="View and Edit" display-name-key="View And Edit">3</value>
+    </property>
+    <property name="DebugMode" display-name-key="Debug Mode" description-key="Debug Mode" of-type="TwoOptions" usage="input" required="false" />
+    <property name="FontSize" display-name-key="Font Size" description-key="Font Size" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="BackgroundColor" display-name-key="Background Color" description-key="Background Color" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="LineHeight" display-name-key="Line Height" description-key="Line Height" of-type="SingleLine.Text" usage="input" required="false" />
+    <type-group name="Text">
+      <type>Multiple</type>
+      <type>SingleLine.Text</type>
+      <type>SingleLine.TextArea</type>
+    </type-group>
+    <!--
+      Property node's of-type attribute can be of-type-group attribute.
+      Example:
+      <type-group name="numbers">
+        <type>Whole.None</type>
+        <type>Currency</type>
+        <type>FP</type>
+        <type>Decimal</type>
+      </type-group>
+      <property name="sampleProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type-group="numbers" usage="bound" required="true" />
+    -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <platform-library name="React" version="16.14.0" />
+      <platform-library name="Fluent" version="9.46.2" />
+      <!-- UNCOMMENT TO ADD MORE RESOURCES
+      <css path="css/UniversalTextbox.css" order="1" />
+      <resx path="strings/UniversalTextbox.1033.resx" version="1.0.0" />
+      -->
+    </resources>
+    <!-- UNCOMMENT TO ENABLE THE SPECIFIED API
+    <feature-usage>
+      <uses-feature name="Device.captureAudio" required="true" />
+      <uses-feature name="Device.captureImage" required="true" />
+      <uses-feature name="Device.captureVideo" required="true" />
+      <uses-feature name="Device.getBarcodeValue" required="true" />
+      <uses-feature name="Device.getCurrentPosition" required="true" />
+      <uses-feature name="Device.pickFile" required="true" />
+      <uses-feature name="Utility" required="true" />
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+    -->
+  </control>
+</manifest>
