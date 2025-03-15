@@ -19,7 +19,6 @@ export class UniversalTextbox implements ComponentFramework.StandardControl<IInp
     ): void {
         this._notifyOutputChanged = notifyOutputChanged;
         context.mode.trackContainerResize(true);
-        this.updateView(context);
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
@@ -41,13 +40,16 @@ export class UniversalTextbox implements ComponentFramework.StandardControl<IInp
             displayMode: this._displayMode,
             onTabChange: (tab: "view" | "edit" | "debug") => {
                 this._currentTab = tab;
-                this.updateView(context);
+                this._notifyOutputChanged();
             },
             onTextChange: (value: string) => {
                 this._rawText = value;
-                this._notifyOutputChanged();
-                this.updateView(context);
+                //this._notifyOutputChanged();
             },
+            onTextBlur:(value:string) => {
+                this._rawText=value;
+                this._notifyOutputChanged();
+            }
         });
     }
 

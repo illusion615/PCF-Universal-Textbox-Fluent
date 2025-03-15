@@ -6,37 +6,48 @@ import {
     TabList,
     Textarea,
 } from "@fluentui/react-components";
-import { Stack } from "@fluentui/react";
+import { Autofill, Stack } from "@fluentui/react";
 import MarkdownIt from "markdown-it";
+import markdownItMermaid from "markdown-it-mermaid";
+import mermaid from "mermaid";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { html as beautifyHtml } from "js-beautify";
+import "./UniversalTextboxComponent.css";
 
 // 自定义 TabPanels 与 TabPanel 组件
 const TabPanels: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div style={{ height: "100%" }}>{children}</div>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>{children}</div>
 );
 const TabPanel: React.FC<{ children: React.ReactNode; hidden: boolean }> = ({
     children,
     hidden,
-}) => (hidden ? null : <div style={{ height: "100%" }}>{children}</div>);
+}) => (hidden ? null : <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>{children}</div>);
 
 // 初始化 markdown-it
-const mdParser = new MarkdownIt({
+const mdParser: MarkdownIt = new MarkdownIt({
     html: true,
     linkify: true,
     typographer: true,
+    breaks: true,
     highlight: (str, lang) => {
+        if (lang === "mermaid") {
+            // Wrap Mermaid code with a div; Mermaid lib will process it.
+            return `<div class="mermaid">${str}</div>`;
+        }
         if (lang && hljs.getLanguage(lang)) {
             try {
-                return hljs.highlight(str, { language: lang }).value;
+                return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
             } catch (__) {
                 /* intentionally empty */
             }
         }
-        return "";
+        return `<pre class="hljs"><code>${mdParser.utils.escapeHtml(str)}</code></pre>`;
     },
 });
+
+// Use the mermaid plugin for markdown-it
+mdParser.use(markdownItMermaid);
 
 // 定义组件的属性接口
 export interface UniversalTextboxComponentProps {
@@ -47,6 +58,7 @@ export interface UniversalTextboxComponentProps {
     displayMode: "View" | "Edit" | "View and Edit";
     onTabChange: (tab: "view" | "edit" | "debug") => void;
     onTextChange: (value: string) => void;
+    onTextBlur: (value: string) => void;
 }
 
 // 定义组件
@@ -58,15 +70,34 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     displayMode,
     onTabChange,
     onTextChange,
+    onTextBlur
 }) => {
 
-    console.log("UniversalTextboxComponent with parameters:", {
-        rawText: rawText,
-        textType: textType,
-        debugMode: debugMode,
-        currentTab: currentTab,
-        displayMode: displayMode
-    });
+    // Inside your component:
+    const [localText, setLocalText] = React.useState(rawText);
+
+    // Sync local state when rawText prop changes externally
+    React.useEffect(() => {
+        setLocalText(rawText);
+    }, [rawText]);
+
+    // Inside your UniversalTextboxComponent
+    React.useEffect(() => {
+        if (currentTab === "view" || currentTab === "debug") {
+            mermaid.initialize({ startOnLoad: false });
+            mermaid.contentLoaded();
+        }
+    }, [currentTab, rawText, textType]);
+
+    if (debugMode) {
+        console.log("UniversalTextboxComponent with parameters:", {
+            rawText: rawText,
+            textType: textType,
+            debugMode: debugMode,
+            currentTab: currentTab,
+            displayMode: displayMode
+        });
+    }
 
     // 将 JSON 转换为可折叠的 HTML 展示
     const renderCollapsibleJson = (value: unknown): string => {
@@ -125,7 +156,7 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
             } else if (textType === "Html") {
                 return beautifyHtml(rawText, { indent_size: 2, wrap_line_length: 80 });
             } else {
-                return mdParser.render(rawText);
+                return `<div class="markdown-content">${mdParser.render(rawText)}</div>`;
             }
         } else if (currentTab === "debug") {
             const parsed = mdParser.render(rawText);
@@ -147,7 +178,9 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     if (displayMode === "View") {
         tabs.push(
             <Tab key="view" value="view" onClick={() => {
-                console.log("clicked view tab under view display mode.");
+                if (debugMode) {
+                    console.log("clicked view tab under view display mode.");
+                }
                 onTabChange("view");
             }}>
                 {textType}
@@ -156,7 +189,10 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     } else if (displayMode === "Edit") {
         tabs.push(
             <Tab key="edit" value="edit" onClick={() => {
-                console.log("clicked edit tab under edit display mode.");
+                if (debugMode
+                ) {
+                    console.log("clicked edit tab under edit display mode.");
+                }
                 onTabChange("edit");
             }}>
                 Edit
@@ -166,13 +202,19 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
         // View and Edit 模式
         tabs.push(
             <Tab key="view" value="view" onClick={() => {
-                console.log("clicked view tab under view and edit display mode and triggered onClick event.");
+                if (debugMode) {
+                    console.log("clicked view tab under view and edit display mode and triggered onClick event.");
+                }
+
                 onTabChange("view");
             }}>
                 {textType}
             </Tab>,
             <Tab key="edit" value="edit" onClick={() => {
-                console.log("clicked edit tab under view and edit display mode and triggered onClick event.");
+                if (debugMode) {
+                    console.log("clicked edit tab under view and edit display mode and triggered onClick event.");
+                }
+
                 onTabChange("edit");
             }}>
                 Edit
@@ -204,18 +246,23 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     } else if (currentTab === "edit") {
         panels.push(
             <TabPanel key="edit" hidden={false}>
-                <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                <div className="container">
                     <Textarea
-                        value={rawText}
-                        style={{ flex: 1, width: "100%", resize: "none" }}
+                        value={localText}
+                        placeholder="Enter text here"
                         onChange={(_e, data) => {
-                            console.log("triggered Textarea onChange event. new data: ", data.value);
-                            rawText = data.value;
-                            onTextChange(rawText);
+                            if (debugMode) {
+                                console.log("triggered Textarea onChange event. new data: ", data.value);
+                            }
+
+                            setLocalText(data.value);
+                            onTextChange(localText)
                         }}
                         onBlur={() => {
-                            console.log("triggered Textarea onBlur event. new rawText: ", rawText);
-                            onTextChange(rawText)
+                            if (debugMode) {
+                                console.log("triggered Textarea onBlur event. new rawText: ", rawText);
+                            }
+                            onTextBlur(localText);
                         }}
                     />
                 </div>
@@ -232,21 +279,13 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
 
     return (
         <FluentProvider theme={webLightTheme}>
-            <style>
-                {`
-                    .markdown-content img {
-                        max-width: 100%;
-                        height: auto;
-                    }
-                `}
-            </style>
             <Stack verticalFill styles={{ root: { height: "100vh" } }}>
                 {/* Header area */}
                 <Stack.Item>
                     <TabList>{tabs}</TabList>
                 </Stack.Item>
                 {/* Panel area 填充其余空间 */}
-                <Stack.Item grow styles={{ root: { overflow: "scroll" } }}>
+                <Stack.Item grow styles={{ root: { overflow: "hidden" } }}>
                     <TabPanels>{panels}</TabPanels>
                 </Stack.Item>
             </Stack>
