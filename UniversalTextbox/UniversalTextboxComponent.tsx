@@ -85,7 +85,8 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     React.useEffect(() => {
         if (currentTab === "view" || currentTab === "debug") {
             mermaid.initialize({ startOnLoad: false });
-            mermaid.contentLoaded();
+            // Re-initialize Mermaid for elements with the "mermaid" class in the rendered HTML
+            mermaid.init(undefined, document.querySelectorAll('.mermaid'));
         }
     }, [currentTab, rawText, textType]);
 
