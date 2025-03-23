@@ -2,7 +2,8 @@
     "extends": "./node_modules/pcf-scripts/tsconfig_base.json",
     "compilerOptions": {
         "typeRoots": [
-            "node_modules/@types"
+            "./node_modules/@types",
+            "./types"
         ],
         "allowSyntheticDefaultImports": true
     }

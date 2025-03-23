@@ -3,13 +3,15 @@ import {
     FluentProvider,
     webLightTheme,
     Tab,
-    TabList,
-    Textarea,
+    TabList
 } from "@fluentui/react-components";
-import { Autofill, Stack } from "@fluentui/react";
+import TextareaAutosize from 'react-textarea-autosize';
 import MarkdownIt from "markdown-it";
 import markdownItMermaid from "markdown-it-mermaid";
+import texmath from "markdown-it-texmath";
 import mermaid from "mermaid";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { html as beautifyHtml } from "js-beautify";
@@ -48,6 +50,10 @@ const mdParser: MarkdownIt = new MarkdownIt({
 
 // Use the mermaid plugin for markdown-it
 mdParser.use(markdownItMermaid);
+mdParser.use(texmath, {
+    engine: katex,
+    delimiters: 'dollars',
+});
 
 // 定义组件的属性接口
 export interface UniversalTextboxComponentProps {
@@ -160,8 +166,7 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
                 return `<div class="markdown-content">${mdParser.render(rawText)}</div>`;
             }
         } else if (currentTab === "debug") {
-            const parsed = mdParser.render(rawText);
-            const formattedHtml = beautifyHtml(parsed, {
+            const formattedHtml = beautifyHtml(mdParser.render(rawText), {
                 indent_size: 2,
                 wrap_line_length: 80,
             });
@@ -172,124 +177,45 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
         return "";
     };
 
-    const tabs: React.ReactNode[] = [];
-    const panels: React.ReactNode[] = [];
-
-    // 根据 displayMode 决定显示哪些 Tab 和内容
-    if (displayMode === "View") {
-        tabs.push(
-            <Tab key="view" value="view" onClick={() => {
-                if (debugMode) {
-                    console.log("clicked view tab under view display mode.");
-                }
-                onTabChange("view");
-            }}>
-                {textType}
-            </Tab>
-        );
-    } else if (displayMode === "Edit") {
-        tabs.push(
-            <Tab key="edit" value="edit" onClick={() => {
-                if (debugMode
-                ) {
-                    console.log("clicked edit tab under edit display mode.");
-                }
-                onTabChange("edit");
-            }}>
-                Edit
-            </Tab>
-        );
-    } else {
-        // View and Edit 模式
-        tabs.push(
-            <Tab key="view" value="view" onClick={() => {
-                if (debugMode) {
-                    console.log("clicked view tab under view and edit display mode and triggered onClick event.");
-                }
-
-                onTabChange("view");
-            }}>
-                {textType}
-            </Tab>,
-            <Tab key="edit" value="edit" onClick={() => {
-                if (debugMode) {
-                    console.log("clicked edit tab under view and edit display mode and triggered onClick event.");
-                }
-
-                onTabChange("edit");
-            }}>
-                Edit
-            </Tab>
-        );
-    }
-
-    // 如果开启了 Debug 模式，则显示 Debug Tab
-    if (debugMode) {
-        tabs.push(
-            <Tab key="debug" value="debug" onClick={() => {
-                console.log("clicked debug tab and triggered onClick event.");
-                onTabChange("debug");
-            }}>
-                Debug
-            </Tab>
-        )
-    }
-
-    // 根据当前 Tab 决定显示的内容
-    if (currentTab === "view") {
-        panels.push(
-            <TabPanel key="view" hidden={false}>
-                <div style={{ padding: "5px", overflow: "scroll", height: "100%" }}
-                    dangerouslySetInnerHTML={{ __html: renderDisplayContent() }}
-                />
-            </TabPanel>
-        );
-    } else if (currentTab === "edit") {
-        panels.push(
-            <TabPanel key="edit" hidden={false}>
-                <div className="container">
-                    <Textarea
-                        value={localText}
-                        placeholder="Enter text here"
-                        onChange={(_e, data) => {
-                            if (debugMode) {
-                                console.log("triggered Textarea onChange event. new data: ", data.value);
-                            }
-
-                            setLocalText(data.value);
-                            onTextChange(localText)
-                        }}
-                        onBlur={() => {
-                            if (debugMode) {
-                                console.log("triggered Textarea onBlur event. new rawText: ", rawText);
-                            }
-                            onTextBlur(localText);
-                        }}
-                    />
-                </div>
-            </TabPanel>
-        );
-    } else {
-        panels.push(
-            <TabPanel key="debug" hidden={false}>
-                <div style={{ padding: "5px", overflow: "scroll", height: "100%" }}
-                    dangerouslySetInnerHTML={{ __html: renderDisplayContent() }}
-                /></TabPanel>
-        );
-    }
+    const handleTabSelect = (_event: unknown, data: { value: unknown }) => {
+        if (debugMode) {
+            console.log("Tab clicked:", data.value);
+        }
+        onTabChange(data.value as string as "view" | "edit" | "debug");
+    };
 
     return (
         <FluentProvider theme={webLightTheme}>
-            <Stack verticalFill styles={{ root: { height: "100vh" } }}>
-                {/* Header area */}
-                <Stack.Item>
-                    <TabList>{tabs}</TabList>
-                </Stack.Item>
-                {/* Panel area 填充其余空间 */}
-                <Stack.Item grow styles={{ root: { overflow: "hidden" } }}>
-                    <TabPanels>{panels}</TabPanels>
-                </Stack.Item>
-            </Stack>
+            <div className="universal-textbox-container" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                <TabList selectedValue={currentTab} onTabSelect={handleTabSelect}>
+                    {(displayMode === "View" || displayMode === "View and Edit") && (
+                        <Tab value="view">{textType}</Tab>
+                    )}
+                    {(displayMode === "Edit" || displayMode === "View and Edit") && (
+                        <Tab value="edit">Edit</Tab>
+                    )}
+                    {debugMode && <Tab value="debug">Debug</Tab>}
+                </TabList>
+
+                <div style={{ flex: 1, overflow: "auto", padding: "5px" }}>
+                    {currentTab === "edit" ? (
+                        <TextareaAutosize
+                            value={localText}
+                            placeholder="Enter text here"
+                            onChange={(e) => {
+                                setLocalText(e.target.value);
+                                onTextChange(e.target.value);
+                            }}
+                            onBlur={() => onTextBlur(localText)}
+                        />
+                    ) : (
+                        <div
+                            style={{ padding: "5px", overflow: "auto", height: "100%" }}
+                            dangerouslySetInnerHTML={{ __html: renderDisplayContent() }}
+                        />
+                    )}
+                </div>
+            </div>
         </FluentProvider>
     );
 };

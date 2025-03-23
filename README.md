@@ -33,7 +33,7 @@ Check the latest solution package under the release section.
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/yourusername/PCF-Universal-Textbox-Fluent.git
+   git clone https://github.com/illusion615/PCF-Universal-Textbox-Fluent.git
    cd PCF-Universal-Textbox-Fluent
    ```
 

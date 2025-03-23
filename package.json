@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Project containing your PowerApps Component Framework (PCF) control.",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "pcf-scripts build",
     "clean": "pcf-scripts clean",
     "lint": "pcf-scripts lint",
     "lint:fix": "pcf-scripts lint fix",
@@ -17,12 +17,16 @@
     "@fluentui/react-components": "9.46.2",
     "@types/highlight.js": "^9.12.4",
     "@types/js-beautify": "^1.14.3",
+    "@types/katex": "^0.16.7",
     "highlight.js": "^11.11.1",
     "js-beautify": "^1.15.1",
+    "katex": "^0.16.21",
     "markdown-it": "^14.1.0",
     "markdown-it-mermaid": "^0.2.0",
+    "markdown-it-texmath": "^1.0.0",
     "mermaid": "^11.5.0",
-    "react-dom": "^16.14.0"
+    "react-dom": "^16.14.0",
+    "react-textarea-autosize": "^8.5.8"
   },
   "devDependencies": {
     "@microsoft/eslint-plugin-power-apps": "^0.2.51",
