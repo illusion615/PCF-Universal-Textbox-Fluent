@@ -2,9 +2,12 @@ import * as React from "react";
 import {
     FluentProvider,
     webLightTheme,
-    Tab,
-    TabList
+    Button,
+    Tag,
+    makeStyles,
+    tokens
 } from "@fluentui/react-components";
+import { EditRegular, EyeRegular, CopyRegular, ContentViewRegular, BugRegular } from "@fluentui/react-icons";
 import TextareaAutosize from 'react-textarea-autosize';
 import MarkdownIt from "markdown-it";
 import markdownItMermaid from "markdown-it-mermaid";
@@ -17,14 +20,27 @@ import "highlight.js/styles/default.css";
 import { html as beautifyHtml } from "js-beautify";
 import "./UniversalTextboxComponent.css";
 
-// 自定义 TabPanels 与 TabPanel 组件
-const TabPanels: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>{children}</div>
-);
-const TabPanel: React.FC<{ children: React.ReactNode; hidden: boolean }> = ({
-    children,
-    hidden,
-}) => (hidden ? null : <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>{children}</div>);
+const useStyles = makeStyles({
+    container: {
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        width: "100%",
+        overflow: "hidden",
+    },
+    header: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: tokens.spacingHorizontalM,
+        borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    },
+    contentArea: {
+        flex: 1,
+        overflow: "auto",
+        padding: tokens.spacingHorizontalM,
+    },
+});
 
 // 初始化 markdown-it
 const mdParser: MarkdownIt = new MarkdownIt({
@@ -60,9 +76,7 @@ export interface UniversalTextboxComponentProps {
     rawText: string;
     textType: "Markdown" | "Json" | "Html" | "Rich Text" | "Plain Text";
     debugMode: boolean;
-    currentTab: "view" | "edit" | "debug";
     displayMode: "View" | "Edit" | "View and Edit";
-    onTabChange: (tab: "view" | "edit" | "debug") => void;
     onTextChange: (value: string) => void;
     onTextBlur: (value: string) => void;
 }
@@ -72,36 +86,28 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     rawText,
     textType,
     debugMode,
-    currentTab,
     displayMode,
-    onTabChange,
     onTextChange,
     onTextBlur
 }) => {
-
-    // Inside your component:
     const [localText, setLocalText] = React.useState(rawText);
+    const [isEditing, setIsEditing] = React.useState(displayMode === "Edit");
+    const [isDebugging, setIsDebugging] = React.useState(false);
 
-    // Sync local state when rawText prop changes externally
     React.useEffect(() => {
         setLocalText(rawText);
     }, [rawText]);
 
-    // Inside your UniversalTextboxComponent
     React.useEffect(() => {
-        if (currentTab === "view" || currentTab === "debug") {
-            mermaid.initialize({ startOnLoad: false });
-            // Re-initialize Mermaid for elements with the "mermaid" class in the rendered HTML
-            mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-        }
-    }, [currentTab, rawText, textType]);
+        mermaid.initialize({ startOnLoad: false });
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+    }, [localText, textType, isEditing]);
 
     if (debugMode) {
         console.log("UniversalTextboxComponent with parameters:", {
             rawText: rawText,
             textType: textType,
             debugMode: debugMode,
-            currentTab: currentTab,
             displayMode: displayMode
         });
     }
@@ -152,20 +158,7 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
 
     // 根据文本类型与当前 Tab 渲染内容
     const renderDisplayContent = (): string => {
-        if (currentTab === "view") {
-            if (textType === "Json") {
-                try {
-                    const jsonObj = JSON.parse(rawText);
-                    return renderCollapsibleJson(jsonObj);
-                } catch (e) {
-                    return `<pre>Invalid JSON</pre>`;
-                }
-            } else if (textType === "Html") {
-                return beautifyHtml(rawText, { indent_size: 2, wrap_line_length: 80 });
-            } else {
-                return `<div class="markdown-content">${mdParser.render(rawText)}</div>`;
-            }
-        } else if (currentTab === "debug") {
+        if (isDebugging) {
             const formattedHtml = beautifyHtml(mdParser.render(rawText), {
                 indent_size: 2,
                 wrap_line_length: 80,
@@ -174,34 +167,82 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")}</code></pre>`;
         }
-        return "";
+        if (textType === "Json") {
+            try {
+                return renderCollapsibleJson(JSON.parse(rawText));
+            } catch {
+                return "<pre>Invalid JSON</pre>";
+            }
+        } else if (textType === "Html") {
+            return beautifyHtml(rawText);
+        } else {
+            return `<div class="markdown-content">${mdParser.render(rawText)}</div>`;
+        }
     };
 
-    const handleTabSelect = (_event: unknown, data: { value: unknown }) => {
-        if (debugMode) {
-            console.log("Tab clicked:", data.value);
-        }
-        onTabChange(data.value as string as "view" | "edit" | "debug");
+    // Reset debug mode when switching to edit or view
+    const handleEditClick = () => {
+        setIsEditing(true);
+        setIsDebugging(false);
+    };
+
+    const handleViewClick = () => {
+        setIsEditing(false);
+        setIsDebugging(false);
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(localText).then(() => {
+            if (debugMode) {
+                console.log("Text copied to clipboard successfully.");
+            }
+            return;
+        }).catch((err) => {
+            console.error("Failed to copy text: ", err);
+        });
     };
 
     return (
         <FluentProvider theme={webLightTheme}>
-            <div className="universal-textbox-container" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                <TabList selectedValue={currentTab} onTabSelect={handleTabSelect}>
-                    {(displayMode === "View" || displayMode === "View and Edit") && (
-                        <Tab value="view">{textType}</Tab>
+            <div className="control-container">
+                <div className="header">
+                    <Tag appearance="brand">
+                        {textType}
+                    </Tag>
+                    <div style={{ flexGrow: 3 }} />
+                    {debugMode && (
+                        <Button
+                            className="icon-button"
+                            icon={<BugRegular />}
+                            onClick={() => {
+                                setIsDebugging(!isDebugging);
+                                setIsEditing(false);
+                            }}></Button>
                     )}
-                    {(displayMode === "Edit" || displayMode === "View and Edit") && (
-                        <Tab value="edit">Edit</Tab>
-                    )}
-                    {debugMode && <Tab value="debug">Debug</Tab>}
-                </TabList>
-
-                <div style={{ flex: 1, overflow: "auto", padding: "5px" }}>
-                    {currentTab === "edit" ? (
+                </div>
+                <div className="content-area">
+                    <div style={{gap:"4px", display: "flex", alignItems: "right", position: "absolute", right: 0, top: 0 }}>
+                        <div style={{ flexGrow: 3 }} />
+                        {!isEditing && !isDebugging && (
+                            <Button
+                                className="icon-button"
+                                icon={<CopyRegular />}
+                                onClick={handleCopy}>
+                            </Button>)}
+                        {!isDebugging && (
+                            <Button
+                                className="icon-button"
+                                icon={isEditing ? <ContentViewRegular /> : <EditRegular />}
+                                onClick={() => {
+                                    setIsEditing(!isEditing);
+                                    setIsDebugging(false);
+                                }}>
+                            </Button>)}
+                    </div>
+                    {isEditing ? (
                         <TextareaAutosize
                             value={localText}
-                            placeholder="Enter text here"
+                            style={{ width: "100%", resize: "none" }}
                             onChange={(e) => {
                                 setLocalText(e.target.value);
                                 onTextChange(e.target.value);
@@ -210,7 +251,7 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
                         />
                     ) : (
                         <div
-                            style={{ padding: "5px", overflow: "auto", height: "100%" }}
+                            style={{ overflow: "scroll", height: "100%" }}
                             dangerouslySetInnerHTML={{ __html: renderDisplayContent() }}
                         />
                     )}

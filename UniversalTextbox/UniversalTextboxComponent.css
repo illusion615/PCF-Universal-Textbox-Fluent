@@ -4,14 +4,15 @@
       padding: 16px;
       background-color: #f9f9f9;
       color: #333;
+      width: 100%;
+      box-sizing: border-box;
 }
+
 .markdown-content img {
-      max-width: 100%;
       height: auto;
 }
 
 .markdown-content table {
-      width: 100%;
       border-collapse: collapse;
       margin-bottom: 16px;
 }
@@ -44,54 +45,152 @@ body,
 /* Control container to manage layout and spacing */
 .control-container {
       display: flex;
-      margin-bottom: 8px; /* Add some space between controls */
+      margin-bottom: 8px;
+      /* Add some space between controls */
       align-items: flex-start;
-      width: 100%; /* Ensure the container takes full width of the parent */
-      border: none; /* Hide the border */
-      overflow-y: auto; /* Make content scrollable if it extends outside the container */
-    }
+      width: 100%;
+      /* Ensure the container takes full width of the parent */
+      border: none;
+      /* Hide the border */
+      /* overflow-y: auto; */
+      /* Make content scrollable if it extends outside the container */
+      flex-direction: column;
+      height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+}
 
 /* Container to ensure vertical alignment and scrollability */
 .container {
       display: flex;
-      align-items: flex-start; /* Align items to the top */
-      overflow-y: auto; /* Make content scrollable if it extends outside the container */
-      height: 100%; /* Ensure the container takes full height of the parent */
-      border: none; /* Hide the container border */
-    }
+      align-items: flex-start;
+      /* Align items to the top */
+      overflow-y: auto;
+      /* Make content scrollable if it extends outside the container */
+      height: 100%;
+      /* Ensure the container takes full height of the parent */
+      border: none;
+      /* Hide the container border */
+}
 
 
 
-  /* Fluent UI Textarea renders a div with textarea inside, target it correctly */
+/* Fluent UI Textarea renders a div with textarea inside, target it correctly */
 .container .fui-Textarea {
       flex: 1;
       display: flex;
       flex-direction: column;
-  }
-  
-  .container .fui-Textarea__textarea {
+}
+
+.container .fui-Textarea__textarea {
       flex: 1;
       width: 100%;
       height: 100%;
       resize: none;
       box-sizing: border-box;
-  }
+}
 
-  .universal-textbox-container {
+.universal-textbox-container {
       width: 100%;
       height: 100%;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-  }
+}
 
-  .universal-textbox-container .fluent-TabList {
+.universal-textbox-container .fluent-TabList {
       flex-shrink: 0;
-  }
-  
-  .universal-textbox-container textarea {
+}
+
+.universal-textbox-container textarea {
       flex: 1;
       width: 100%;
       border: none;
       resize: none;
-  }
+}
+
+.header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      width: 100%;
+      gap: 5px;
+}
+
+/* Content area styling */
+.content-area {
+      position: relative; /* Important for positioning child elements */
+      flex: 1;
+      margin: 5px;
+      
+      width: 100%;
+      box-sizing: border-box;
+}
+
+/* Container for buttons at top-right corner */
+.content-area .button-container {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+      flex:1;
+      flex-direction: row-reverse;
+}
+
+/* Icon button styling */
+.icon-button {
+    position: relative;
+    /*border: none !important;*/
+    /*background: transparent !important;*/
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Force remove border from Fluent UI buttons */
+/*.icon-button,
+.icon-button.fui-Button {
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+}
+*/
+
+/* Optional: remove outline on focus for cleaner look */
+.icon-button:focus,
+.icon-button.fui-Button:focus {
+      outline: none !important;
+}
+
+/* Tooltip styling */
+.icon-button .tooltip {
+    visibility: hidden;
+    opacity: 0;
+    background-color: #b3b3b3;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 4px 8px;
+    position: absolute;
+    z-index: 100;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.3s;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.icon-button:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}

@@ -36,12 +36,7 @@ export class UniversalTextbox implements ComponentFramework.StandardControl<IInp
             rawText: this._rawText,
             textType: this._textType,
             debugMode: this._debugMode,
-            currentTab: this._currentTab,
             displayMode: this._displayMode,
-            onTabChange: (tab: "view" | "edit" | "debug") => {
-                this._currentTab = tab;
-                this._notifyOutputChanged();
-            },
             onTextChange: (value: string) => {
                 this._rawText = value;
                 //this._notifyOutputChanged();
