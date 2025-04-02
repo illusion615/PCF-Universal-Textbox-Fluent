@@ -3,11 +3,9 @@ import {
     FluentProvider,
     webLightTheme,
     Button,
-    Tag,
-    makeStyles,
-    tokens
+    Tag
 } from "@fluentui/react-components";
-import { EditRegular, EyeRegular, CopyRegular, ContentViewRegular, BugRegular } from "@fluentui/react-icons";
+import { EditRegular, CopyRegular, BugRegular, Checkmark20Regular, Dismiss20Regular, ZoomIn20Regular, ZoomOut20Regular } from "@fluentui/react-icons";
 import TextareaAutosize from 'react-textarea-autosize';
 import MarkdownIt from "markdown-it";
 import markdownItMermaid from "markdown-it-mermaid";
@@ -19,28 +17,6 @@ import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { html as beautifyHtml } from "js-beautify";
 import "./UniversalTextboxComponent.css";
-
-const useStyles = makeStyles({
-    container: {
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        width: "100%",
-        overflow: "hidden",
-    },
-    header: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: tokens.spacingHorizontalM,
-        borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
-    },
-    contentArea: {
-        flex: 1,
-        overflow: "auto",
-        padding: tokens.spacingHorizontalM,
-    },
-});
 
 // 初始化 markdown-it
 const mdParser: MarkdownIt = new MarkdownIt({
@@ -63,6 +39,13 @@ const mdParser: MarkdownIt = new MarkdownIt({
         return `<pre class="hljs"><code>${mdParser.utils.escapeHtml(str)}</code></pre>`;
     },
 });
+
+mdParser.renderer.rules.image = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+    const src = token.attrGet("src");
+    const alt = token.content || "";
+    return `<img src="${src}" alt="${alt}" class="markdown-image" data-src="${src}" />`;
+};
 
 // Use the mermaid plugin for markdown-it
 mdParser.use(markdownItMermaid);
@@ -93,15 +76,41 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
     const [localText, setLocalText] = React.useState(rawText);
     const [isEditing, setIsEditing] = React.useState(displayMode === "Edit");
     const [isDebugging, setIsDebugging] = React.useState(false);
+    const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
+    const [modalImageUrl, setModalImageUrl] = React.useState<string | null>(null);
+    const [zoomLevel, setZoomLevel] = React.useState(1);
 
     React.useEffect(() => {
         setLocalText(rawText);
     }, [rawText]);
 
     React.useEffect(() => {
-        mermaid.initialize({ startOnLoad: false });
-        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
-    }, [localText, textType, isEditing]);
+        if (textType === "Markdown" && !isEditing && !isDebugging) {
+            mermaid.initialize({ startOnLoad: false });
+            setTimeout(() => {
+                mermaid.run({ querySelector: '.mermaid' });
+            }, 0);
+        }
+    }, [localText, textType, isEditing, isDebugging]);
+
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (isImageModalOpen) {
+                if (e.key === "+") {
+                    setZoomLevel((prev) => prev + 0.1);
+                } else if (e.key === "-") {
+                    setZoomLevel((prev) => Math.max(0.1, prev - 0.1));
+                } else if (e.key === "Escape") {
+                    setIsImageModalOpen(false);
+                }
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [isImageModalOpen]);
 
     if (debugMode) {
         console.log("UniversalTextboxComponent with parameters:", {
@@ -180,17 +189,6 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
         }
     };
 
-    // Reset debug mode when switching to edit or view
-    const handleEditClick = () => {
-        setIsEditing(true);
-        setIsDebugging(false);
-    };
-
-    const handleViewClick = () => {
-        setIsEditing(false);
-        setIsDebugging(false);
-    };
-
     const handleCopy = () => {
         navigator.clipboard.writeText(localText).then(() => {
             if (debugMode) {
@@ -202,60 +200,124 @@ const UniversalTextboxComponent: React.FC<UniversalTextboxComponentProps> = ({
         });
     };
 
+    const handleImageClick = (src: string) => {
+        setModalImageUrl(src);
+        setIsImageModalOpen(true);
+        setZoomLevel(1); // Reset zoom level
+    };
+
     return (
         <FluentProvider theme={webLightTheme}>
             <div className="control-container">
                 <div className="header">
-                    <Tag appearance="brand">
-                        {textType}
-                    </Tag>
+                    <Tag appearance="brand">{textType}</Tag>
                     <div style={{ flexGrow: 3 }} />
-                    {debugMode && (
-                        <Button
-                            className="icon-button"
-                            icon={<BugRegular />}
-                            onClick={() => {
-                                setIsDebugging(!isDebugging);
-                                setIsEditing(false);
-                            }}></Button>
-                    )}
-                </div>
-                <div className="content-area">
-                    <div style={{gap:"4px", display: "flex", alignItems: "right", position: "absolute", right: 0, top: 0 }}>
-                        <div style={{ flexGrow: 3 }} />
+                    <div className="button-container">
                         {!isEditing && !isDebugging && (
                             <Button
+                                title="Copy"
                                 className="icon-button"
                                 icon={<CopyRegular />}
-                                onClick={handleCopy}>
-                            </Button>)}
-                        {!isDebugging && (
+                                onClick={handleCopy} />
+                        )}
+                        {displayMode != "View" && !isDebugging && !isEditing && (
                             <Button
+                                title="Edit"
                                 className="icon-button"
-                                icon={isEditing ? <ContentViewRegular /> : <EditRegular />}
+                                icon={<EditRegular />}
                                 onClick={() => {
-                                    setIsEditing(!isEditing);
+                                    setIsEditing(true);
                                     setIsDebugging(false);
-                                }}>
-                            </Button>)}
+                                }}
+                            />
+                        )}
+                        {!isDebugging && isEditing && (
+                            <Button
+                                title="Save"
+                                className="icon-button"
+                                icon={<Checkmark20Regular />}
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setIsDebugging(false);
+                                    onTextBlur(localText);
+                                }}
+                            />
+                        )}
+                        {!isDebugging && isEditing && (
+                            <Button
+                                title="Cancel"
+                                className="icon-button"
+                                icon={<Dismiss20Regular />}
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setIsDebugging(false);
+                                }}
+                            />
+                        )}{debugMode && (
+                            <Button
+                                title="Debug"
+                                className="icon-button"
+                                icon={<BugRegular />}
+                                onClick={() => {
+                                    setIsDebugging(!isDebugging);
+                                    setIsEditing(false);
+                                }}
+                            />
+                        )}
                     </div>
+                </div>
+                <div className="content-area">
                     {isEditing ? (
                         <TextareaAutosize
                             value={localText}
-                            style={{ width: "100%", resize: "none" }}
-                            onChange={(e) => {
-                                setLocalText(e.target.value);
-                                onTextChange(e.target.value);
-                            }}
-                            onBlur={() => onTextBlur(localText)}
+                            style={{ width: "100%", resize: "none", flexGrow: 1, boxSizing: "border-box", overflow: "auto" }}
+                            onChange={(e) => setLocalText(e.target.value)}
                         />
                     ) : (
                         <div
-                            style={{ overflow: "scroll", height: "100%" }}
+                            className="markdown-content"
                             dangerouslySetInnerHTML={{ __html: renderDisplayContent() }}
+                            onClick={(e) => {
+                                const target = e.target as HTMLElement;
+                                if (target.tagName === "IMG" && target.classList.contains("markdown-image")) {
+                                    const src = target.getAttribute("data-src");
+                                    if (src) {
+                                        handleImageClick(src);
+                                    }
+                                }
+                            }}
                         />
                     )}
                 </div>
+                {isImageModalOpen && modalImageUrl && (
+                    <div className="image-modal">
+                        <div className="image-modal-overlay" onClick={() => setIsImageModalOpen(false)}></div>
+                        <div className="image-modal-content">
+                            <div className="image-modal-header">
+                                <Button
+                                    className="image-modal-button"
+                                    title="Close"
+                                    icon={<Dismiss20Regular />}
+                                    onClick={() => setIsImageModalOpen(false)}></Button>
+                                <Button
+                                    className="image-modal-button"
+                                    title="Zoom in"
+                                    icon={<ZoomIn20Regular />}
+                                    onClick={() => setZoomLevel((prev) => prev + 0.1)}></Button>
+                                <Button
+                                    className="image-modal-button"
+                                    title="Zoom out"
+                                    icon={<ZoomOut20Regular />}
+                                    onClick={() => setZoomLevel((prev) => Math.max(0.1, prev - 0.1))}></Button>
+                            </div>
+                            <img
+                                src={modalImageUrl}
+                                alt="Modal"
+                                style={{ transform: `scale(${zoomLevel})` }}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </FluentProvider>
     );

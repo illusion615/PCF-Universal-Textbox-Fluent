@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="illusion615" constructor="UniversalTextbox" version="0.0.1" display-name-key="UniversalTextbox" description-key="UniversalTextbox supports multiple text formats including Markdown, JSON and HTML. It also includes a debug mode for viewing the rendered HTML." control-type="virtual">
+  <control namespace="illusion615" constructor="UniversalTextbox" version="1.2.2" display-name-key="UniversalTextbox" description-key="UniversalTextbox supports multiple text formats including Markdown, JSON and HTML. It also includes a debug mode for viewing the rendered HTML." control-type="virtual">
     <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.
     If it is not using any external service, please set the enabled="false" and DO NOT add any domain below. The "enabled" will be false by default.
     Example1:
@@ -52,9 +52,9 @@
     <resources>
       <code path="index.ts" order="1"/>
       <platform-library name="React" version="16.14.0" />
-      <platform-library name="Fluent" version="9.46.2" />
+      <platform-library name="Fluent" version="9.46.2" />      
+      <css path="UniversalTextboxComponent.css" order="1" />
       <!-- UNCOMMENT TO ADD MORE RESOURCES
-      <css path="css/UniversalTextbox.css" order="1" />
       <resx path="strings/UniversalTextbox.1033.resx" version="1.0.0" />
       -->
     </resources>

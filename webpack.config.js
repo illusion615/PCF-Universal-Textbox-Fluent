@@ -12,6 +12,10 @@ for (let i = 0; i < process.argv.length; i++) {
 }
 process.argv = filteredArgs;
 
+const TerserPlugin = require("terser-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+
 module.exports = () => ({
     mode: 'production',
     entry: './UniversalTextbox/index.ts',
@@ -41,5 +45,14 @@ module.exports = () => ({
         splitChunks: {
             chunks: 'all',
         },
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: { compress: true },
+            }),
+            new CssMinimizerPlugin(),
+        ],
     },
+    plugins: [
+        new BundleAnalyzerPlugin()
+    ]
 });

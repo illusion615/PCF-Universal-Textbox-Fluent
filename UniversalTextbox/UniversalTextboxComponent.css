@@ -1,3 +1,123 @@
+html,
+body,
+#root {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+}
+
+/* Control container to manage layout and spacing */
+.control-container {
+      display: flex;
+      /* Add some space between controls */
+      margin-bottom: 8px;
+      align-items: flex-start;
+      /* Ensure the container takes full width of the parent */
+      width: 100%;
+      /* Hide the border */
+      border: none;
+      /* Make content scrollable if it extends outside the container */
+      /* overflow-y: auto; */
+      flex-direction: column;
+      height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      min-height: 0;
+}
+
+/* Container to ensure vertical alignment and scrollability */
+.container {
+      display: flex;
+      /* Align items to the top */
+      align-items: flex-start;
+      /* Make content scrollable if it extends outside the container */
+      overflow-y: auto;
+      /* Ensure the container takes full height of the parent */
+      height: 100%;
+      /* Hide the container border */
+      border: none;
+}
+
+.header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      gap: 5px;
+}
+
+/* Content area styling */
+.content-area {
+      /* Important for positioning child elements */
+      position: relative;
+      flex: 1;
+      margin: 5px;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 0;
+      overflow: hidden;
+}
+
+/* Container for buttons at top-right corner */
+.content-area .button-container {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+      flex: 1;
+      flex-direction: row-reverse;
+}
+
+/* Icon button styling */
+.icon-button,
+.icon-button.fui-Button {
+      position: relative;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease-in-out;
+}
+
+/* Optional: remove outline on focus for cleaner look */
+.icon-button:focus,
+.icon-button.fui-Button:focus {
+      outline: none !important;
+}
+
+.icon-button:hover {
+      background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Tooltip styling */
+.icon-button .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      background-color: #b3b3b3;
+      color: #fff;
+      text-align: center;
+      border-radius: 4px;
+      padding: 4px 8px;
+      position: absolute;
+      z-index: 100;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: opacity 0.3s;
+      font-size: 12px;
+      white-space: nowrap;
+}
+
+.icon-button:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+}
+
 .markdown-content {
       font-family: Arial, sans-serif;
       line-height: 1.6;
@@ -6,10 +126,24 @@
       color: #333;
       width: 100%;
       box-sizing: border-box;
+      overflow: auto;
 }
 
 .markdown-content img {
+      max-width: 100%;
+      /* 图片宽度不能超过容器宽度 */
+      max-height: 100%;
+      /* 图片高度不能超过容器高度 */
       height: auto;
+      /* 自动调整高度以保持比例 */
+      object-fit: contain;
+      /* 确保图片在容器内保持比例 */
+      display: block;
+      /* 移除图片周围的额外间距 */
+      margin: 0 auto;
+      /* 图片居中显示（可选） */
+      cursor: pointer;
+      /* 鼠标悬停时显示手型光标 */
 }
 
 .markdown-content table {
@@ -33,164 +167,75 @@
       font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 }
 
-html,
-body,
-#root {
+.image-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      margin: 0;
-      padding: 0;
-}
-
-/* Control container to manage layout and spacing */
-.control-container {
       display: flex;
-      margin-bottom: 8px;
-      /* Add some space between controls */
-      align-items: flex-start;
-      width: 100%;
-      /* Ensure the container takes full width of the parent */
-      border: none;
-      /* Hide the border */
-      /* overflow-y: auto; */
-      /* Make content scrollable if it extends outside the container */
-      flex-direction: column;
-      height: 100%;
-      box-sizing: border-box;
-      overflow: hidden;
-}
-
-/* Container to ensure vertical alignment and scrollability */
-.container {
-      display: flex;
-      align-items: flex-start;
-      /* Align items to the top */
-      overflow-y: auto;
-      /* Make content scrollable if it extends outside the container */
-      height: 100%;
-      /* Ensure the container takes full height of the parent */
-      border: none;
-      /* Hide the container border */
-}
-
-
-
-/* Fluent UI Textarea renders a div with textarea inside, target it correctly */
-.container .fui-Textarea {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-}
-
-.container .fui-Textarea__textarea {
-      flex: 1;
-      width: 100%;
-      height: 100%;
-      resize: none;
-      box-sizing: border-box;
-}
-
-.universal-textbox-container {
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-}
-
-.universal-textbox-container .fluent-TabList {
-      flex-shrink: 0;
-}
-
-.universal-textbox-container textarea {
-      flex: 1;
-      width: 100%;
-      border: none;
-      resize: none;
-}
-
-.header {
-      display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
-      width: 100%;
-      gap: 5px;
+      z-index: 1000;
 }
 
-/* Content area styling */
-.content-area {
-      position: relative; /* Important for positioning child elements */
-      flex: 1;
-      margin: 5px;
-      
+.image-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      box-sizing: border-box;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
 }
 
-/* Container for buttons at top-right corner */
-.content-area .button-container {
+.image-modal-header {
       position: absolute;
       top: 8px;
-      right: 8px;
+      left: 8px;
       display: flex;
-      gap: 4px;
-      z-index: 10;
-      flex:1;
       flex-direction: row-reverse;
+      align-items: right;
+      gap: 4px;
+      z-index: 1001;
 }
 
-/* Icon button styling */
-.icon-button {
-    position: relative;
-    /*border: none !important;*/
-    /*background: transparent !important;*/
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease-in-out;
+.image-modal-content {
+      position: relative;
+      z-index: 1001;
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
 }
 
-.icon-button:hover {
-    background-color: rgba(0, 0, 0, 0.05) !important;
+.image-modal-content img {
+      max-width: 90vw;
+      max-height: 80vh;
+      transition: transform 0.2s ease-in-out;
 }
 
-/* Force remove border from Fluent UI buttons */
-/*.icon-button,
-.icon-button.fui-Button {
+.image-modal-button {
+      position: absolute;
       border: none !important;
       background: transparent !important;
       box-shadow: none !important;
-}
-*/
-
-/* Optional: remove outline on focus for cleaner look */
-.icon-button:focus,
-.icon-button.fui-Button:focus {
-      outline: none !important;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease-in-out;
+      top: 8px;
 }
 
-/* Tooltip styling */
-.icon-button .tooltip {
-    visibility: hidden;
-    opacity: 0;
-    background-color: #b3b3b3;
-    color: #fff;
-    text-align: center;
-    border-radius: 4px;
-    padding: 4px 8px;
-    position: absolute;
-    z-index: 100;
-    bottom: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: opacity 0.3s;
-    font-size: 12px;
-    white-space: nowrap;
+.image-modal-close {
+      right: 8px;
 }
 
-.icon-button:hover .tooltip {
-    visibility: visible;
-    opacity: 1;
+.image-modal-zoom-in {
+      right: 48px;
+}
+
+.image-modal-zoom-out {
+      right: 88px;
 }
